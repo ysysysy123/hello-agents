@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Hello-Agents：一次工具调用循环",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      620
+    ],
+    "views": [
+      {
+        "id": "minimal-loop",
+        "label": "最小循环",
+        "focus": [
+          "user",
+          "agent",
+          "llm",
+          "tool"
+        ],
+        "note": "先看模型决定是否调用工具，以及工具结果如何回到上下文。"
+      },
+      {
+        "id": "state-and-stop",
+        "label": "状态与停止",
+        "focus": [
+          "agent",
+          "state",
+          "llm",
+          "final"
+        ],
+        "note": "观察状态、最大步数和最终回答如何共同决定停止。"
+      },
+      {
+        "id": "framework-boundary",
+        "label": "框架边界",
+        "focus": [
+          "agent",
+          "llm",
+          "tool",
+          "state"
+        ],
+        "note": "先理解循环，再把同一职责映射到框架封装。"
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "User",
+      "sublabel": "任务与约束"
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent Loop",
+      "sublabel": "决策与编排"
+    },
+    {
+      "id": "llm",
+      "type": "cloud",
+      "label": "LLM",
+      "sublabel": "思考 / tool call"
+    },
+    {
+      "id": "tool",
+      "type": "messagebus",
+      "label": "Tool",
+      "sublabel": "外部能力"
+    },
+    {
+      "id": "state",
+      "type": "database",
+      "label": "State",
+      "sublabel": "messages + results"
+    },
+    {
+      "id": "final",
+      "type": "external",
+      "label": "Final Answer",
+      "sublabel": "可解释输出"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 265,
+      "label": "理解请求"
+    },
+    {
+      "from": 275,
+      "to": 420,
+      "label": "循环与工具"
+    },
+    {
+      "from": 430,
+      "to": 525,
+      "label": "停止与输出"
+    }
+  ],
+  "messages": [
+    {
+      "from": "user",
+      "to": "agent",
+      "y": 160,
+      "label": "task + context",
+      "variant": "emphasis"
+    },
+    {
+      "from": "agent",
+      "to": "state",
+      "y": 190,
+      "label": "append user message",
+      "variant": "default"
+    },
+    {
+      "from": "agent",
+      "to": "llm",
+      "y": 220,
+      "label": "messages + tools",
+      "variant": "emphasis"
+    },
+    {
+      "from": "llm",
+      "to": "agent",
+      "y": 250,
+      "label": "answer or tool call",
+      "variant": "return"
+    },
+    {
+      "from": "agent",
+      "to": "tool",
+      "y": 290,
+      "label": "name + JSON args",
+      "variant": "emphasis"
+    },
+    {
+      "from": "tool",
+      "to": "agent",
+      "y": 320,
+      "label": "result / error",
+      "variant": "return"
+    },
+    {
+      "from": "agent",
+      "to": "state",
+      "y": 350,
+      "label": "append tool result",
+      "variant": "default"
+    },
+    {
+      "from": "agent",
+      "to": "llm",
+      "y": 380,
+      "label": "continue with feedback",
+      "variant": "emphasis"
+    },
+    {
+      "from": "llm",
+      "to": "agent",
+      "y": 410,
+      "label": "final or next call",
+      "variant": "return"
+    },
+    {
+      "from": "agent",
+      "to": "state",
+      "y": 440,
+      "label": "check step / stop state",
+      "variant": "dashed"
+    },
+    {
+      "from": "agent",
+      "to": "final",
+      "y": 475,
+      "label": "final response + evidence",
+      "variant": "emphasis"
+    },
+    {
+      "from": "final",
+      "to": "user",
+      "y": 510,
+      "label": "answer",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "agent",
+      "from": 154,
+      "to": 515,
+      "type": "backend"
+    },
+    {
+      "participant": "llm",
+      "from": 214,
+      "to": 256,
+      "type": "cloud"
+    },
+    {
+      "participant": "tool",
+      "from": 284,
+      "to": 326,
+      "type": "messagebus"
+    },
+    {
+      "participant": "state",
+      "from": 184,
+      "to": 389,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "先手写再封装",
+      "items": [
+        "先用普通 Python 函数和字典/JSON 模拟工具",
+        "明确 tool name、参数、返回值和异常",
+        "框架只负责减少胶水代码，不替代理解循环"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "真正的状态",
+      "items": [
+        "状态至少包含消息、工具结果、步数和停止条件",
+        "工具失败要回到模型上下文，而不是静默吞掉",
+        "模拟通过不代表真实模型或设备调用通过"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "后续接项目",
+      "items": [
+        "从 3–5 个固定案例建立简单基线",
+        "记录每次工具选择、参数、返回和最终结果",
+        "只有跨轮信息确实有价值时再加入记忆或 RAG"
+      ]
+    }
+  ]
+}
